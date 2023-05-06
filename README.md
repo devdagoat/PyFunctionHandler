@@ -69,7 +69,7 @@ result_y = returns["y"]
 print(other_instance.combine("!!!!!")) # prints: Hi, this is a test!!!!!
 print(result_y) # prints: 2.5
 ```
-## What cannot be passed
+## What cannot be done
 - can't process mixed args (positional and keyword arguments together)
-- lambda functions, unless \_\_name\_\_ is explicitly set
-- callable instances (instances of classes that have a \_\_call\_\_ method), similar issues with above, instances don't have a \_\_name\_\_ attribute and even if that was handled, the name of the method (\_\_call\_\_) isn't unique by any means.
+- can't pass lambda functions, unless \_\_name\_\_ is explicitly set
+- can't pass callable instances (instances of classes that have a \_\_call\_\_ method), similar issues with above, instances don't have a \_\_name\_\_ attribute and even if that was handled, the name of the method (\_\_call\_\_) isn't unique by any means.
