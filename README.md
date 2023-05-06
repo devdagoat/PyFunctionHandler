@@ -70,5 +70,5 @@ print(other_instance.combine("!!!!!")) # prints: Hi, this is a test!!!!!
 print(result_y) # prints: 2.5
 ```
 ## What cannot be passed
-- lambda functions, unless __name__ is explicitly set
-- callable instances (instances of classes that have a __call__ method), similar issues with above, instances don't have a __name__ and even if that was handled, the name of the method (__call__) isn't unique
+- lambda functions, unless \_\_name\_\_ is explicitly set
+- callable instances (instances of classes that have a \_\_call\_\_ method), similar issues with above, instances don't have a \_\_name\_\_ and even if that was handled, the name of the method (\_\_call\_\_) isn't unique by any means.
