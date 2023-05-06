@@ -12,5 +12,5 @@ def handler(*func: Callable[...,Any], **func_kwds: dict[str,Any] | tuple[Any]) -
                 _returned = _func(**_args)
         else:
             _returned = _func()
-        _returns.update({_func.__name__ : _returned})
+        _returns.update({_funcname : _returned})
     return _returns
