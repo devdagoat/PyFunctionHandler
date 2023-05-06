@@ -21,7 +21,7 @@ def handler(*func: Callable[...,Any], **func_kwds: dict[str,Any] | tuple[Any]) -
                 _returned = _func(**_args) # pass accordingly and save returned value
         else:
             _returned = _func() # call without args since none is given
-        _returns.update({_func.__name__ : _returned}) # function name : returned object
+        _returns.update({_funcname : _returned}) # function name : returned object
     return _returns # return the dict
 ```
 
