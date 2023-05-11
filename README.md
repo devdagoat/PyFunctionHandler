@@ -1,47 +1,80 @@
 # PyFunctionHandler
 Handler function written in Python that executes other functions with given args (positional and keyword) in one go.
 ## Usage
-Just add the function and imports to your code really
+```
+handler(func, func=(
+(positional arg1, positional arg2, ...) or None, 
+{keyword arg1 name: keyword arg1, ...} or None
+)
+```
 ## Explanation
 ```python
-from typing import Callable,Any # type hinting is important!
+from types import NoneType 
 
-# func: Callable, can take any amount of arguments and can return anything
-# func_kwds: {function name : any arguments in tuple or dict depending on arg type}
+# Since the code is hard to understand by it's own,
+# type hinting is even more important in this case.
 
-def handler(*func: Callable[...,Any], **func_kwds: dict[str,Any] | tuple[Any]) -> dict[str,Any]:
-    _returns = {} # initialize dict to be returned
-    for _func in func: # iterate through callables
-        _funcname = _func.__name__ # define _funcname
-        if _funcname in func_kwds.keys(): # check if args are given
-            _args = func_kwds[_funcname] # define args from keyword args dict
-            if type(_args) == tuple: # positional arguments 
-                _returned = _func(*_args) # pass accordingly and save returned value
-            elif type(_args) == dict: # keyword arguments
-                _returned = _func(**_args) # pass accordingly and save returned value
-        else:
-            _returned = _func() # call without args since none is given
-        _returns.update({_funcname : _returned}) # function name : returned object
-    return _returns # return the dict
+from typing import Callable,Any
+
+
+def handler(*call: Callable[...,Any], 
+            **callable_kwds: tuple[tuple[Any] | None, dict[str,Any] | None]
+            ) -> dict[str,Any]:
+    
+    _returns = {} # Initialize dict to be returned
+
+    for _call in call:
+
+        if not callable(_call): # Check if object is callable
+            raise TypeError(f"{_call} is not a callable object")
+        
+        callable_name = _call.__name__ # Set callable name variable
+        _args, _kwds = (), {} # Set default args
+
+        if callable_name in callable_kwds.keys(): # If an argument is passed:
+
+            _all_args = callable_kwds[callable_name]
+
+            if not isinstance(_all_args[0], (tuple,NoneType)): # Check if positional arguments are valid
+                raise TypeError(f"Got {type(_all_args[0])} instead of tuple[args] or None as positional arguments")
+            _args = () if _all_args[0] is None else _all_args[0]
+
+            if not isinstance(_all_args[1], (dict,NoneType)): # Check if keyword arguments are valid
+                raise TypeError(f"Got {type(_all_args[1])} instead of dict[argname, args] or None as keyword arguments")
+            _kwds = {} if _all_args[1] is None else _all_args[1]
+
+        _returned = _call(*_args, **_kwds) # Call the callable with arguments and save returned object
+
+        _returns.update({callable_name : _returned}) # Update dict with the items
+
+    return _returns
 ```
 
 ## Testing
 ```python
-def x(a:int,b:int) -> int:
-    return a**b
 
-def y(a:int,b:int) -> float:
-    return a/b
+def a():
+    return "No args are passed to this function"
+
+def x(a:int, b:int) -> int:
+    return a ** b
+
+def y(a:int, b:int) -> float:
+    return a / b
     
-# lambdas are unsupported because they don't have any name to begin with! 
+def z(a:int, b:int, p:int) -> int:
+    return (a+b) ** p
+
+# Lambdas are unsupported because they don't have any name to begin with! 
 
 l = lambda i: i*1000 
 
-# it's possible if the __name__ is explicitly set, but don't do it unless you absolutely have to. It's not Pythonic at all  
+# It's possible to use them if their __name__ is explicitly set,
+# but don't do this unless you absolutely have to.
 
 l.__name__ = "l"
 
-# instances can be created as well:
+# Instances can be created with the handler as well:
 
 class MyClass:
     def __init__(self,s1:str,s2:str) -> None:
@@ -52,24 +85,19 @@ class MyClass:
     
 my_instance = MyClass("Hi, ", "I am ")
 
-returns = handler(x, y, MyClass, my_instance.combine, print, str, 
-                  x=(3,5), # positional args 
-                  y={"a":10,"b":4}, # keyword args
-                  MyClass=("Hi, ","this is a test"), # positional args passed to class
-                  combine={"s3":"Me!"}, # note that we use the function name only
-                  print=("Print function returns None",), # print can only accept positional args
-                  str={"object":42}) # built-in type that returns a string
 
-print(returns) # prints the following: {'x': 243, 'y': 2.5, 'MyClass': <__main__.MyClass object at <address in memory>>, 'combine': 'Hi, I am Me!', 'print': None, 'str': '42'}
+returns = handler(a, x, y, z, MyClass, my_instance.combine, print, str, 
+                  x=((3, 5), None), # positional args
+                  y=(None, {"a":3, "b":4}), # keyword args
+                  z=((2, 10), {"p":2}), # mixed args
+                  MyClass=(("Hi, ", "this is a test"), None), # positional args passed to class
+                  combine=(None, {"s3":"Me!"}), # note that we use the function name only
+                  print=(("Print function always returns None",), None), # print can only accept positional args
+                  str=(None, {"object":42})) # it's possible to pass object as kwargs to str type
 
-# and if we want to use the values:
+print(returns)
 
-other_instance = returns["MyClass"]
-result_y = returns["y"]
-print(other_instance.combine("!!!!!")) # prints: Hi, this is a test!!!!!
-print(result_y) # prints: 2.5
 ```
 ## What cannot be done
-- can't process mixed args (positional and keyword arguments together)
 - can't pass lambda functions, unless \_\_name\_\_ is explicitly set
 - can't pass callable instances (instances of classes that have a \_\_call\_\_ method), similar issues with above, instances don't have a \_\_name\_\_ attribute and even if that was handled, the name of the method (\_\_call\_\_) isn't unique by any means.
